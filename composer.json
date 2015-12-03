@@ -1,0 +1,17 @@
+{
+    "name": "ealore/progress",
+    "description": "Generates Bootstrap 3 progress bars based on dates",
+    "type": "library",
+    "require": {
+        "nesbot/carbon": "^1.21",
+        "illuminate/support": "^5.1"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Andrea Bergamasco",
+            "email": "andrea@bergamasco.me"
+        }
+    ],
+    "minimum-stability": "dev"
+}
