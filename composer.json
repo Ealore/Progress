@@ -13,5 +13,10 @@
             "email": "andrea@bergamasco.me"
         }
     ],
-    "minimum-stability": "dev"
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Ealore\\Progress\\": "src"
+        }
+    }
 }
