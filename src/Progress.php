@@ -35,7 +35,7 @@ class Progress
 
     public function setThreshold($date = null)
     {
-        if(is_null($date) && isset($this->end) && !isset($this->threshold)) {
+        if (is_null($date) && isset($this->end) && !isset($this->threshold)) {
             $this->threshold = $this->end->copy()->sub($this->getThresholdInterval());
             return;
         }
@@ -89,48 +89,159 @@ class Progress
         return $this->now > $this->end;
     }
 
-    public function getColor()
+    protected function getSafeColor()
     {
-        if($this->isExpired()) {
-            return 'progress-bar-danger';
-        }
-
-        if($this->isExpiring()) {
-            return 'progress-bar-warning';
-        }
-
-        if($this->isSafe()) {
             return 'progress-bar-success';
+    }
+
+    protected function getExpiringColor()
+    {
+        return 'progress-bar-warning';
+    }
+
+    protected function getExpiredColor()
+    {
+        return 'progress-bar-danger';
+    }
+
+    public function getTotalDays()
+    {
+        if ($this->now < $this->start) {
+            return 0;
         }
 
-        return 'progress-bar-info';
+        if ($this->now > $this->end) {
+            // now minus start
+            return $this->now->copy()->diffInDays($this->start->copy());
+        }
+
+        if ($this->now < $this->end) {
+            // end minus start
+            return $this->end->copy()->diffInDays($this->start->copy());
+        }
     }
 
-    public function getLife()
+    public function getSafeDays()
     {
-        return 40;
+        if ($this->now < $this->start) {
+            return 0;
+        }
+
+        if ($this->now < $this->threshold) {
+            // now minus start
+            return $this->now->copy()->diffInDays($this->threshold->copy());
+        }
+
+        if ($this->now > $this->threshold) {
+            // threshold minus start
+            return $this->threshold->copy()->diffInDays($this->start->copy());
+        }
+
     }
 
-    /*
-    <div class="progress">
-        <div class="progress-bar progress-bar-success" style="width: 35%">
-            <span class="sr-only">35% Complete (success)</span>
-        </div>
-        <div class="progress-bar progress-bar-warning progress-bar-striped" style="width: 20%">
-            <span class="sr-only">20% Complete (warning)</span>
-        </div>
-        <div class="progress-bar progress-bar-danger" style="width: 10%">
-            <span class="sr-only">10% Complete (danger)</span>
-        </div>
-    </div>
-    */
+    protected function getExpiringDays()
+    {
+        if ($this->now < $this->threshold) {
+            return 0;
+        }
+
+        if ($this->now > $this->threshold && $this->now < $this->end) {
+            // still alive but expiring, now minus threshold
+            return $this->now->copy()->diffInDays($this->threshold->copy());
+        }
+
+        if ($this->now > $this->end) {
+            // expired, end minus threshold
+            return $this->end->copy()->diffInDays($this->threshold->copy());
+        }
+    }
+
+    protected function getExpiredDays()
+    {
+        if ($this->now < $this->end) {
+            // still alive
+            return 0;
+        }
+
+        if ($this->now > $this->end) {
+            // expired, now minus end
+            return $this->now->copy()->diffInDays($this->end->copy());
+        }
+    }
+
+    protected function getSafePercentage()
+    {
+
+    }
+
+    protected function getExpiringPercentage()
+    {
+
+    }
+
+    protected function getExpiredPercentage()
+    {
+
+    }
+
+    protected function getSafeProgressBar()
+    {
+        if ($this->getSafePercentage()) {
+            return '<div class="progress-bar '
+            . $this->getSafeColor()
+            . '" style="width: '
+            . $this->getSafePercentage()
+            . '%">
+            <span class="sr-only">'
+            . $this->getSafePercentage()
+            . '% Complete (success)</span>
+            </div>';
+        }
+
+        return '';
+    }
+
+    protected function getExpiringProgressBar()
+    {
+        if ($this->getExpiringPercentage()) {
+            return '<div class="progress-bar '
+            . $this->geExpiringColor()
+            . '" style="width: '
+            . $this->getExpiringPercentage()
+            . '%">
+            <span class="sr-only">'
+            . $this->getExpiringPercentage()
+            . '% Complete (warning)</span>
+            </div>';
+        }
+
+        return '';
+    }
+
+    protected function getExpiredProgressBar()
+    {
+        if ($this->getExpiredPercentage()) {
+            return '<div class="progress-bar '
+            . $this->getExpiredColor()
+            . '" style="width: '
+            . $this->getExpiredPercentage()
+            . '%">
+            <span class="sr-only">'
+            . $this->getExpiredPercentage()
+            . '% Complete (danger)</span>
+            </div>';
+        }
+
+        return '';
+    }
+
     public function render()
     {
         $this->html = '<div class="progress">'
-        . '<div class="progress-bar ' . $this->getColor() . '" role="progressbar" aria-valuenow="' . $this->getLife() . '" aria-valuemin="0" aria-valuemax="100" style="width: ' . $this->getLife() . '%">'
-        . '<span class="sr-only">' . $this->getLife() . '% Complete</span>'
-        . '</div>'
-        . '</div>';
+            . $this->getSafeProgressBar()
+            . $this->getExpiringProgressBar()
+            . $this->getExpiredProgressBar()
+            . '</div>';
 
         return $this->html;
     }

@@ -2,7 +2,8 @@
 
 use Ealore\Progress\Progress;
 
-class ProgressTest extends PHPUnit_Framework_TestCase {
+class ProgressTest extends PHPUnit_Framework_TestCase
+{
 
     public function testDates()
     {
@@ -88,5 +89,38 @@ class ProgressTest extends PHPUnit_Framework_TestCase {
         $progress = new Progress;
 
         $this->assertNotNull($progress->render());
+    }
+
+    public function testGetTotalDays()
+    {
+        $progress = new Progress;
+
+        $progress->setStart('2013-01-01');
+        $progress->setEnd('2013-12-31');
+
+        $this->assertEquals(
+            Carbon\Carbon::now()->diffInDays(Carbon\Carbon::parse('2013-01-01')),
+            $progress->getTotalDays()
+        );
+    }
+
+    public function testGetSafeDaysAlive()
+    {
+        $progress = new Progress;
+
+        $progress->setStart(Carbon\Carbon::now()->subDays(40));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(40));
+
+        $this->assertEquals(9, $progress->getSafeDays());
+    }
+
+    public function testGetSafeDaysNotYetStarted()
+    {
+        $progress = new Progress;
+
+        $progress->setStart(Carbon\Carbon::now()->addDays(40));
+        $progress->setStart(Carbon\Carbon::now()->addDays(80));
+
+        $this->assertEquals(0, $progress->getSafeDays());
     }
 }
