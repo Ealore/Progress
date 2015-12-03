@@ -99,7 +99,7 @@ class Progress
             return 'progress-bar-warning';
         }
 
-        if($this->isAlive()) {
+        if($this->isSafe()) {
             return 'progress-bar-success';
         }
 
