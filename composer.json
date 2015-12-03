@@ -1,6 +1,6 @@
 {
     "name": "ealore/progress",
-    "description": "Generates Bootstrap 3 progress bars based on dates",
+    "description": "A generator of Bootstrap 3 progress bars based on dates",
     "type": "library",
     "require": {
         "nesbot/carbon": "^1.21",
