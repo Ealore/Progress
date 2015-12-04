@@ -27,6 +27,7 @@ class Progress
         $this->start = Carbon::parse($date);
     }
 
+    // updates automatically the threshold date
     public function setEnd($date = null)
     {
         $this->end = Carbon::parse($date);
@@ -35,7 +36,7 @@ class Progress
 
     public function setThreshold($date = null)
     {
-        if (is_null($date) && isset($this->end) && !isset($this->threshold)) {
+        if (is_null($date) && isset($this->end)) {
             $this->threshold = $this->end->copy()->sub($this->getThresholdInterval());
             return;
         }
@@ -43,9 +44,11 @@ class Progress
         $this->threshold = Carbon::parse($date);
     }
 
+    // updates automatically the threshold date
     public function setThresholdInterval($interval = null)
     {
         $this->threshold_interval = $interval;
+        $this->setThreshold();
     }
 
     public function getStart()
@@ -61,6 +64,11 @@ class Progress
     public function getNow()
     {
         return $this->now;
+    }
+
+    public function getThreshold()
+    {
+        return $this->threshold;
     }
 
     public function getThresholdInterval()
@@ -106,17 +114,23 @@ class Progress
 
     public function getTotalDays()
     {
+        return $this->end->copy()->diffInDays($this->start->copy());
+    }
+
+    public function getTotalLivedDays()
+    {
+        // not yet started
         if ($this->now < $this->start) {
             return 0;
         }
 
-        if ($this->now > $this->end) {
-            // now minus start
+        // started but not finished yet
+        if ($this->now > $this->start && $this->now < $this->end) {
             return $this->now->copy()->diffInDays($this->start->copy());
         }
 
-        if ($this->now < $this->end) {
-            // end minus start
+        // already finished
+        if ($this->now > $this->end) {
             return $this->end->copy()->diffInDays($this->start->copy());
         }
     }
