@@ -103,14 +103,17 @@ class ProgressTest extends PHPUnit_Framework_TestCase
     public function testSetThresholdWithInvalidDate()
     {
         $progress = new Progress;
+        $progress->setThresholdInterval('P10D');
         $progress->setStart(Carbon\Carbon::now()->subDays(40));
         $progress->setEnd(Carbon\Carbon::now()->addDays(40));
 
         // we set the threshold before the start
         $progress->setThreshold(Carbon\Carbon::now()->subDays(50));
         $this->assertEquals(Carbon\Carbon::now()->subDays(40), $progress->getThreshold());
-        // we set the threshold after the end
 
+        // we set the threshold after the end
+        $progress->setThreshold(Carbon\Carbon::now()->addDays(50));
+        $this->assertEquals(Carbon\Carbon::now()->addDays(30), $progress->getThreshold());
     }
 
     public function testIsAlive()
@@ -120,6 +123,18 @@ class ProgressTest extends PHPUnit_Framework_TestCase
         $progress->setEnd('2030-01-01');
 
         $this->assertTrue($progress->isAlive());
+    }
+
+    public function testIsSafe()
+    {
+        $progress = new Progress;
+
+        $progress->setThresholdInterval('P10D');
+        $progress->setStart(Carbon\Carbon::now()->subDays(30));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(50));
+
+        $this->assertEquals(80, $progress->getTotalDays());
+        $this->assertTrue($progress->isSafe());
     }
 
     public function testIsExpiring()
@@ -155,13 +170,6 @@ class ProgressTest extends PHPUnit_Framework_TestCase
         $this->assertFalse($progress->isExpired());
     }
 
-    public function testRender()
-    {
-        $progress = new Progress;
-
-        $this->assertNotNull($progress->render());
-    }
-
     public function testGetTotalDaysAlreadyExpired()
     {
         $progress = new Progress;
@@ -170,7 +178,7 @@ class ProgressTest extends PHPUnit_Framework_TestCase
         $progress->setEnd('2013-12-31');
 
         $this->assertEquals(
-            Carbon\Carbon::parse('2013-12-31')->diffInDays(Carbon\Carbon::parse('2013-01-01')),
+            Carbon\Carbon::parse(Carbon\Carbon::now())->diffInDays(Carbon\Carbon::parse('2013-01-01')),
             $progress->getTotalDays()
         );
     }
@@ -197,6 +205,17 @@ class ProgressTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(120, $progress->getTotalDays());
     }
 
+    public function testGetTotalLivedDaysExpired()
+    {
+        $progress = new Progress;
+
+        $progress->setStart(Carbon\Carbon::now()->subDays(80));
+        $progress->setEnd(Carbon\Carbon::now()->subDays(40));
+
+        $this->assertEquals(40, $progress->getTotalLivedDays());
+        $this->assertEquals(80, $progress->getTotalDays());
+    }
+
     public function testGetSafeDaysNotYetStarted()
     {
         $progress = new Progress;
@@ -215,19 +234,93 @@ class ProgressTest extends PHPUnit_Framework_TestCase
         $progress->setStart(Carbon\Carbon::now()->subDays(40));
         $progress->setEnd(Carbon\Carbon::now()->addDays(40));
 
-        $this->assertEquals(9, $progress->getSafeDays());
+        $this->assertEquals(40, $progress->getSafeDays());
         $this->assertEquals(80, $progress->getTotalDays());
     }
 
-    public function testGetSafeDaysExpired()
+    public function testGetSafeDaysExpiring()
     {
         $progress = new Progress;
 
-        $progress->setThresholdInterval('P10D');
+        $progress->setThresholdInterval('P20D');
         $progress->setStart(Carbon\Carbon::now()->subDays(80));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(10));
+
+        $this->assertEquals(70, $progress->getSafeDays());
+        $this->assertEquals(10, $progress->getExpiringDays());
+        $this->assertEquals(90, $progress->getTotalDays());
+    }
+
+    public function testRenderNotStartedYet()
+    {
+        $progress = new Progress;
+
+        $progress->setThresholdInterval('P20D');
+        $progress->setStart(Carbon\Carbon::now()->addDays(10));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(110));
+
+        $this->assertEquals(0, $progress->getSafeDays());
+
+        $this->assertEquals('<div class="progress">'
+        . '</div>', $progress->render());
+    }
+
+    public function testRenderWhileSafe()
+    {
+        $progress = new Progress;
+
+        $progress->setThresholdInterval('P20D');
+        $progress->setStart(Carbon\Carbon::now()->subDays(10));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(90));
+
+        $this->assertEquals(10, $progress->getSafeDays());
+
+        $this->assertEquals('<div class="progress">'
+        . '<div class="progress-bar progress-bar-success" style="width: 10%"><span class="sr-only">10%</span></div>'
+        . '</div>', $progress->render());
+    }
+
+    public function testRenderExpiring()
+    {
+        $progress = new Progress;
+
+        $progress->setThresholdInterval('P20D');
+        $progress->setStart(Carbon\Carbon::now()->subDays(90));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(10));
+
+        $this->assertEquals(80, $progress->getSafeDays());
+        $this->assertEquals(10, $progress->getExpiringDays());
+        $this->assertEquals('<div class="progress">'
+        . '<div class="progress-bar progress-bar-success" style="width: 80%"><span class="sr-only">80%</span></div>'
+        . '<div class="progress-bar progress-bar-warning" style="width: 10%"><span class="sr-only">10%</span></div>'
+        . '</div>', $progress->render());
+    }
+
+    public function testRenderAlreadyExpired()
+    {
+        $progress = new Progress;
+
+        $progress->setThresholdInterval('P20D');
+        $progress->setStart(Carbon\Carbon::now()->subDays(100));
         $progress->setEnd(Carbon\Carbon::now()->subDays(40));
 
-        $this->assertEquals(30, $progress->getSafeDays());
-        $this->assertEquals(40, $progress->getTotalDays());
+        $this->assertEquals('<div class="progress">'
+        . '<div class="progress-bar progress-bar-success" style="width: 40%"><span class="sr-only">40%</span></div>'
+        . '<div class="progress-bar progress-bar-warning" style="width: 20%"><span class="sr-only">20%</span></div>'
+        . '<div class="progress-bar progress-bar-danger" style="width: 40%"><span class="sr-only">40%</span></div>'
+        . '</div>', $progress->render());
+    }
+
+    public function testRenderUsingConstructorAlreadyStarted()
+    {
+        $progress = new Progress(Carbon\Carbon::now()->subDays(60), Carbon\Carbon::now()->addDays(40), 'P20D');
+
+        $this->assertEquals(Carbon\Carbon::now()->subDays(60), $progress->getStart());
+        $this->assertEquals(Carbon\Carbon::now()->addDays(40), $progress->getEnd());
+        $this->assertEquals(Carbon\Carbon::now()->addDays(40)->sub(new DateInterval('P20D')), $progress->getThreshold());
+        $this->assertEquals(100, $progress->getTotalDays());
+        $this->assertEquals('<div class="progress">'
+        . '<div class="progress-bar progress-bar-success" style="width: 60%"><span class="sr-only">60%</span></div>'
+        . '</div>', $progress->render());
     }
 }

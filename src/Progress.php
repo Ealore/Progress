@@ -15,39 +15,75 @@ class Progress
 
     protected $threshold_interval = 'P1M';
 
-    public function __construct()
+    public function __construct($start = null, $end = null, $threshold_interval = null)
     {
         $this->now = Carbon::now();
-        $this->start = Carbon::now()->subMonth();
-        $this->end = Carbon::now()->addMonth();
+        $this->setStart($start);
+        $this->setEnd($end);
+        $this->setThresholdInterval($threshold_interval);
+    }
+
+    public function getDefaultStart()
+    {
+        return Carbon::now()->subMonth();
+    }
+
+    public function getDefaultEnd()
+    {
+        return Carbon::now()->addMonth();
     }
 
     public function setStart($date = null)
     {
+        if (is_null($date)) {
+            $this->start = $this->getDefaultStart();
+            return;
+        }
         $this->start = Carbon::parse($date);
     }
 
     // updates automatically the threshold date
     public function setEnd($date = null)
     {
-        $this->end = Carbon::parse($date);
+        if (is_null($date)) {
+            $this->end = $this->getDefaultEnd();
+        } else {
+            $this->end = Carbon::parse($date);
+        }
+
         $this->setThreshold();
     }
 
     public function setThreshold($date = null)
     {
-        if (is_null($date) && isset($this->end)) {
+        if (is_null($date) && isset($this->end) && !is_null($this->end)) {
             $this->threshold = $this->end->copy()->sub($this->getThresholdInterval());
             return;
         }
 
         $this->threshold = Carbon::parse($date);
+
+        $this->checkThreshold();
+    }
+
+    protected function checkThreshold()
+    {
+        if ($this->threshold > $this->end && !is_null($this->end)) {
+            $this->threshold = $this->end->copy()->sub($this->getThresholdInterval());
+        }
+
+        if ($this->threshold <= $this->start) {
+            $this->threshold = $this->start;
+        }
     }
 
     // updates automatically the threshold date
     public function setThresholdInterval($interval = null)
     {
-        $this->threshold_interval = $interval;
+        if (!is_null($interval)) {
+            $this->threshold_interval = $interval;
+        }
+
         $this->setThreshold();
     }
 
@@ -112,9 +148,14 @@ class Progress
         return 'progress-bar-danger';
     }
 
+    // if expired, we extend the bar until now
     public function getTotalDays()
     {
-        return $this->end->copy()->diffInDays($this->start->copy());
+        if ($this->now < $this->end) {
+            return $this->end->copy()->diffInDays($this->start->copy());
+        }
+
+        return $this->now->copy()->diffInDays($this->start->copy());
     }
 
     public function getTotalLivedDays()
@@ -130,72 +171,63 @@ class Progress
         }
 
         // already finished
-        if ($this->now > $this->end) {
-            return $this->end->copy()->diffInDays($this->start->copy());
-        }
+        return $this->end->copy()->diffInDays($this->start->copy());
     }
 
     public function getSafeDays()
     {
-        if ($this->now < $this->start) {
+        if ($this->now <= $this->start) {
             return 0;
         }
 
-        if ($this->now < $this->threshold) {
+        if ($this->now > $this->start && $this->now <= $this->threshold) {
             // now minus start
-            return $this->now->copy()->diffInDays($this->threshold->copy());
+            return $this->now->copy()->diffInDays($this->start->copy());
         }
 
-        if ($this->now > $this->threshold) {
-            // threshold minus start
-            return $this->threshold->copy()->diffInDays($this->start->copy());
-        }
-
+        // threshold minus start
+        return $this->threshold->copy()->diffInDays($this->start->copy());
     }
 
-    protected function getExpiringDays()
+    public function getExpiringDays()
     {
-        if ($this->now < $this->threshold) {
+        if ($this->now <= $this->threshold) {
             return 0;
         }
 
-        if ($this->now > $this->threshold && $this->now < $this->end) {
+        if ($this->now > $this->threshold && $this->now <= $this->end) {
             // still alive but expiring, now minus threshold
             return $this->now->copy()->diffInDays($this->threshold->copy());
         }
 
-        if ($this->now > $this->end) {
-            // expired, end minus threshold
-            return $this->end->copy()->diffInDays($this->threshold->copy());
-        }
+        // expired, end minus threshold
+        return $this->end->copy()->diffInDays($this->threshold->copy());
     }
 
-    protected function getExpiredDays()
+    public function getExpiredDays()
     {
-        if ($this->now < $this->end) {
+        if ($this->now <= $this->end) {
             // still alive
             return 0;
         }
 
-        if ($this->now > $this->end) {
-            // expired, now minus end
-            return $this->now->copy()->diffInDays($this->end->copy());
-        }
+        // expired, now minus end
+        return $this->now->copy()->diffInDays($this->end->copy());
     }
 
     protected function getSafePercentage()
     {
-
+        return round(($this->getSafeDays() / $this->getTotalDays()) * 100, 2);
     }
 
     protected function getExpiringPercentage()
     {
-
+        return round(($this->getExpiringDays() / $this->getTotalDays()) * 100, 2);
     }
 
     protected function getExpiredPercentage()
     {
-
+        return round(($this->getExpiredDays() / $this->getTotalDays()) * 100, 2);
     }
 
     protected function getSafeProgressBar()
@@ -205,11 +237,9 @@ class Progress
             . $this->getSafeColor()
             . '" style="width: '
             . $this->getSafePercentage()
-            . '%">
-            <span class="sr-only">'
+            . '%"><span class="sr-only">'
             . $this->getSafePercentage()
-            . '% Complete (success)</span>
-            </div>';
+            . '%</span></div>';
         }
 
         return '';
@@ -219,14 +249,12 @@ class Progress
     {
         if ($this->getExpiringPercentage()) {
             return '<div class="progress-bar '
-            . $this->geExpiringColor()
+            . $this->getExpiringColor()
             . '" style="width: '
             . $this->getExpiringPercentage()
-            . '%">
-            <span class="sr-only">'
+            . '%"><span class="sr-only">'
             . $this->getExpiringPercentage()
-            . '% Complete (warning)</span>
-            </div>';
+            . '%</span></div>';
         }
 
         return '';
@@ -239,11 +267,9 @@ class Progress
             . $this->getExpiredColor()
             . '" style="width: '
             . $this->getExpiredPercentage()
-            . '%">
-            <span class="sr-only">'
+            . '%"><span class="sr-only">'
             . $this->getExpiredPercentage()
-            . '% Complete (danger)</span>
-            </div>';
+            . '%</span></div>';
         }
 
         return '';
@@ -251,12 +277,10 @@ class Progress
 
     public function render()
     {
-        $this->html = '<div class="progress">'
+        return '<div class="progress">'
             . $this->getSafeProgressBar()
             . $this->getExpiringProgressBar()
             . $this->getExpiredProgressBar()
             . '</div>';
-
-        return $this->html;
     }
 }
