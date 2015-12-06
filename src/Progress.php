@@ -230,7 +230,7 @@ class Progress
         $safe_percentage = $this->getSafePercentage();
         $expiring_percentage = $this->getExpiringPercentage();
         $expired_percentage = round(($this->getExpiredDays() / $this->getTotalDays()) * 100, 2);
-        
+
         if (($safe_percentage + $expiring_percentage + $expired_percentage) > 100) {
             $expired_percentage = 100.0 - ($safe_percentage + $expiring_percentage);
         }
