@@ -215,19 +215,26 @@ class Progress
         return $this->now->copy()->diffInDays($this->end->copy());
     }
 
-    protected function getSafePercentage()
+    public function getSafePercentage()
     {
         return round(($this->getSafeDays() / $this->getTotalDays()) * 100, 2);
     }
 
-    protected function getExpiringPercentage()
+    public function getExpiringPercentage()
     {
         return round(($this->getExpiringDays() / $this->getTotalDays()) * 100, 2);
     }
 
-    protected function getExpiredPercentage()
+    public function getExpiredPercentage()
     {
-        return round(($this->getExpiredDays() / $this->getTotalDays()) * 100, 2);
+        $safe_percentage = $this->getSafePercentage();
+        $expiring_percentage = $this->getExpiringPercentage();
+        $expired_percentage = round(($this->getExpiredDays() / $this->getTotalDays()) * 100, 2);
+        
+        if (($safe_percentage + $expiring_percentage + $expired_percentage) > 100) {
+            $expired_percentage = 100.0 - ($safe_percentage + $expiring_percentage);
+        }
+        return $expired_percentage;
     }
 
     protected function getSafeProgressBar()
