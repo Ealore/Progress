@@ -311,6 +311,21 @@ class ProgressTest extends PHPUnit_Framework_TestCase
         . '</div>', $progress->render());
     }
 
+    public function testRenderAlreadyExpiredWithPrimes()
+    {
+        $progress = new Progress;
+
+        $progress->setThresholdInterval('P13D');
+        $progress->setStart(Carbon\Carbon::now()->subDays(91));
+        $progress->setEnd(Carbon\Carbon::now()->subDays(3));
+
+        $this->assertEquals('<div class="progress">'
+        . '<div class="progress-bar progress-bar-success" style="width: 82.42%"><span class="sr-only">82.42%</span></div>'
+        . '<div class="progress-bar progress-bar-warning" style="width: 14.29%"><span class="sr-only">14.29%</span></div>'
+        . '<div class="progress-bar progress-bar-danger" style="width: 3.29%"><span class="sr-only">3.29%</span></div>'
+        . '</div>', $progress->render());
+    }
+
     public function testRenderUsingConstructorAlreadyStarted()
     {
         $progress = new Progress(Carbon\Carbon::now()->subDays(60), Carbon\Carbon::now()->addDays(40), 'P20D');
