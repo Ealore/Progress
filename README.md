@@ -30,20 +30,23 @@ You may use also setters:
     $progress->setEnd('2013-12-31');
 
     echo $progress->render();
-    
+
 ### Threshold of the 'warning' section
 
 You may set a threshold to mark the start of the 'warning' section in two ways:
 
-- as a date: 
+- as a date:
 `$progress->setThreshold('2014-12-01');`
 
 
 - as an interval, following PHP's *DateInterval* accepted format:
 `$progress->setThresholdInterval('P20D');`
 
-By default the 'warning' section starts one month before the end.
-It may be removed completely by setting it to zero:
+### Default values
+
+When start and end are not set, the default values used are defined from the initialization timestamp: one month before for the start and next month for the end.
+By default the 'warning' section starts one month before the end, if start and end are not set this means that the 'warning' starts at the moment of initialization.
+The threshold may be removed completely by setting it to zero:
 
     $progress->setThresholdInterval('P0D');
 

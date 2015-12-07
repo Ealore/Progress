@@ -23,16 +23,6 @@ class Progress
         $this->setThresholdInterval($threshold_interval);
     }
 
-    public function getDefaultStart()
-    {
-        return Carbon::now()->subMonth();
-    }
-
-    public function getDefaultEnd()
-    {
-        return Carbon::now()->addMonth();
-    }
-
     public function setStart($date = null)
     {
         if (is_null($date)) {
@@ -66,25 +56,33 @@ class Progress
         $this->checkThreshold();
     }
 
-    protected function checkThreshold()
-    {
-        if ($this->threshold > $this->end && !is_null($this->end)) {
-            $this->threshold = $this->end->copy()->sub($this->getThresholdInterval());
-        }
-
-        if ($this->threshold <= $this->start) {
-            $this->threshold = $this->start;
-        }
-    }
-
-    // updates automatically the threshold date
     public function setThresholdInterval($interval = null)
     {
         if (!is_null($interval)) {
             $this->threshold_interval = $interval;
         }
 
+        // updates automatically the threshold date
         $this->setThreshold();
+    }
+
+    public function setThresholdPercentage($percentage = null)
+    {
+        $float_percentage = floatval($percentage);
+
+        $percentage_date = $this->convertPercentageToDate($float_percentage);
+
+        $this->setThreshold($percentage_date);
+    }
+
+    public function getDefaultStart()
+    {
+        return Carbon::now()->subMonth();
+    }
+
+    public function getDefaultEnd()
+    {
+        return Carbon::now()->addMonth();
     }
 
     public function getStart()
@@ -174,6 +172,13 @@ class Progress
         return $this->end->copy()->diffInDays($this->start->copy());
     }
 
+    protected function convertPercentageToDate($percentage = null)
+    {
+        $total_days = $this->getTotalDays();
+        $percentage_days = round($total_days * ($percentage / 100));
+        return $this->getEnd()->copy()->subDays($percentage_days);
+    }
+
     public function getSafeDays()
     {
         if ($this->now <= $this->start) {
@@ -213,6 +218,17 @@ class Progress
 
         // expired, now minus end
         return $this->now->copy()->diffInDays($this->end->copy());
+    }
+
+    protected function checkThreshold()
+    {
+        if ($this->threshold > $this->end && !is_null($this->end)) {
+            $this->threshold = $this->end->copy()->sub($this->getThresholdInterval());
+        }
+
+        if ($this->threshold <= $this->start) {
+            $this->threshold = $this->start;
+        }
     }
 
     protected function getSafePercentage()

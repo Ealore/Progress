@@ -100,6 +100,54 @@ class ProgressTest extends PHPUnit_Framework_TestCase
         $this->assertEquals(Carbon\Carbon::now()->addDays(100), $progress->getThreshold());
     }
 
+    public function testSetThresholdPercentageAsString()
+    {
+        $progress = new Progress;
+        $progress->setStart(Carbon\Carbon::now()->subDays(50));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(50));
+        $progress->setThresholdPercentage('20%');
+
+        $this->assertEquals(Carbon\Carbon::now()->addDays(30), $progress->getThreshold());
+    }
+
+    public function testSetThresholdPercentageJustInitialized()
+    {
+        $progress = new Progress;
+        $progress->setThresholdPercentage(30);
+        $this->assertNotNull($progress->getThreshold());
+        $this->assertInstanceOf('Carbon\Carbon', $progress->getThreshold());
+    }
+
+    public function testSetThresholdPercentageAsInteger()
+    {
+        $progress = new Progress;
+        $progress->setStart(Carbon\Carbon::now()->subDays(50));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(50));
+        $progress->setThresholdPercentage(20);
+
+        $this->assertEquals(Carbon\Carbon::now()->addDays(30), $progress->getThreshold());
+    }
+
+    public function testSetThresholdPercentageAsIntegerLongerInterval()
+    {
+        $progress = new Progress;
+        $progress->setStart(Carbon\Carbon::now()->subDays(500));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(500));
+        $progress->setThresholdPercentage(20);
+
+        $this->assertEquals(Carbon\Carbon::now()->addDays(300), $progress->getThreshold());
+    }
+
+    public function testSetThresholdPercentageAsFloat()
+    {
+        $progress = new Progress;
+        $progress->setStart(Carbon\Carbon::now()->subDays(50));
+        $progress->setEnd(Carbon\Carbon::now()->addDays(50));
+        $progress->setThresholdPercentage(20.02);
+
+        $this->assertEquals(Carbon\Carbon::now()->addDays(30), $progress->getThreshold());
+    }
+
     public function testSetThresholdWithInvalidDate()
     {
         $progress = new Progress;
