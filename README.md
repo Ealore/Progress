@@ -30,3 +30,7 @@ You may use also setters:
     $progress->setEnd('2013-12-31');
 
     echo $progress->render();
+
+## Examples
+
+![Screenshot](/../screenshots/screenshot.png?raw=true "Screenshot")
