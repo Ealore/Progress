@@ -2,6 +2,13 @@
     "name": "ealore/progress",
     "description": "A generator of Bootstrap 3 progress bars based on dates",
     "type": "library",
+    "keywords": [
+        "laravel",
+        "bootstrap",
+        "generator",
+        "carbon"
+    ],
+    "homepage": "https://github.com/Ealore/Progress",
     "require": {
         "nesbot/carbon": "^1.21",
         "illuminate/support": "^5.1"
@@ -10,7 +17,8 @@
     "authors": [
         {
             "name": "Andrea Bergamasco",
-            "email": "andrea@bergamasco.me"
+            "email": "andrea@bergamasco.me",
+            "homepage": "https://github.com/vjandrea"
         }
     ],
     "minimum-stability": "dev",
