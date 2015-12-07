@@ -17,7 +17,7 @@ class Progress
 
     public function __construct($start = null, $end = null, $threshold_interval = null)
     {
-        $this->now = Carbon::now();
+        $this->now = Carbon::today();
         $this->setStart($start);
         $this->setEnd($end);
         $this->setThresholdInterval($threshold_interval);
@@ -77,12 +77,12 @@ class Progress
 
     public function getDefaultStart()
     {
-        return Carbon::now()->subMonth();
+        return Carbon::today()->subMonth();
     }
 
     public function getDefaultEnd()
     {
-        return Carbon::now()->addMonth();
+        return Carbon::today()->addMonth();
     }
 
     public function getStart()
