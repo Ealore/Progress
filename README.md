@@ -33,4 +33,4 @@ You may use also setters:
 
 ## Examples
 
-![Screenshot](/../screenshots/screenshot.png?raw=true "Screenshot")
+![Screenshot](/../screenshots/screenshots/screenshot.png?raw=true "Screenshot")
