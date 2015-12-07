@@ -87,6 +87,22 @@ class Progress
         $this->setThreshold();
     }
 
+    public function setThresholdPercentage($percentage = null)
+    {
+        $float_percentage = floatval($percentage);
+
+        $percentage_date = $this->convertPercentageToDate($float_percentage);
+
+        $this->setThreshold($percentage_date);
+    }
+
+    protected function convertPercentageToDate($percentage = null)
+    {
+        $total_days = $this->getTotalDays();
+        $percentage_days = round($total_days * ($percentage / 100));
+        return $this->getEnd()->copy()->subDays($percentage_days);
+    }
+
     public function getStart()
     {
         return $this->start;
