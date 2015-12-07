@@ -114,9 +114,8 @@ class ProgressTest extends PHPUnit_Framework_TestCase
     {
         $progress = new Progress;
         $progress->setThresholdPercentage(30);
-
-        $this->assertEquals('', $progress->getThreshold());
         $this->assertNotNull($progress->getThreshold());
+        $this->assertInstanceOf('Carbon\Carbon', $progress->getThreshold());
     }
 
     public function testSetThresholdPercentageAsInteger()
