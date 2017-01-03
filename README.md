@@ -11,7 +11,7 @@ If you use Laravel 5 you may add the service provider to config/app.php provider
     Ealore\Progress\ProgressServiceProvider::class,
 
 ## Usage
-    $progress = new Ealore\Progress\Progress('2013-01-01','2013-12-31','P30D');
+    $progress = new Ealore\Progress('2013-01-01','2013-12-31','P30D');
     echo $progress->render(); // generate the html for the progress bar, based on the dates you provided.
 
 The HTML generated looks like this:
@@ -25,9 +25,9 @@ The HTML generated looks like this:
 You may use also setters:
 
     $progress = new Ealore\Progress\Progress;
-    $progress->setStart('2013-01-01');
-    $progress->setThreshold('2013-12-01');
-    $progress->setEnd('2013-12-31');
+    $progress->setStartDate('2013-01-01');
+    $progress->setWarningThresholdAsDate('2013-12-01');
+    $progress->setEndDate('2013-12-31');
 
     echo $progress->render();
 
@@ -36,22 +36,38 @@ You may use also setters:
 You may set a threshold to mark the start of the 'warning' section in two ways:
 
 - as a date:
-`$progress->setThreshold('2014-12-01');`
+`$progress->setWarningThresholdAsDate('2014-12-01');`
 
+- as a string, following PHP's *DateInterval* format:
+`$progress->setWarningThresholdAsString('P20D');` // 20 days
 
-- as an interval, following PHP's *DateInterval* accepted format:
-`$progress->setThresholdInterval('P20D');`
+- as a percentage represented by a float value:
+`$progress->setWarningThresholdAsString(25.0);` // 25%
 
 ### Default values
 
-When start and end are not set, the default values used are defined from the initialization timestamp: one month before for the start and next month for the end.
-By default the 'warning' section starts one month before the end, if start and end are not set this means that the 'warning' starts at the moment of initialization.
+When start and end are not set, the default values used are defined from the initialization timestamp:
+ **one month** before for the start and **next month** for the end.
+By default the 'warning' section starts one month before the end. 
+If start and end are not set this means that the 'warning' starts at the moment of initialization.
 The threshold may be removed completely by setting it to zero:
 
-    $progress->setThresholdInterval('P0D');
+    $progress->setWarningThresholdAsString('P0D');
 
-Take a look at the examples below, the last one shows the effect of setting the interval to zero.
+Take a look at the examples below, the last one shows the effect of setting the warning interval to zero.
 
 ## Examples
 
 ![Screenshot](/../screenshots/screenshots/screenshot.png?raw=true "Screenshot")
+
+
+## Contribution
+
+PRs are welcome
+
+
+## Roadmap
+
+*   Create a more flexible setWarningThreshold method that accepts mixed parameters
+*   Method documentation
+*   Refactor tests

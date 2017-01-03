@@ -1,6 +1,6 @@
 <?php
 
-namespace Ealore\Progress;
+namespace Ealore;
 
 use Carbon\Carbon;
 
@@ -15,36 +15,44 @@ class Progress
 
     protected $threshold_interval = 'P1M';
 
+    /**
+     * Progress constructor.
+     * @param mixed $start
+     * @param mixed $end
+     * @param string $threshold_interval
+     */
     public function __construct($start = null, $end = null, $threshold_interval = null)
     {
         $this->now = Carbon::today();
-        $this->setStart($start);
-        $this->setEnd($end);
-        $this->setThresholdInterval($threshold_interval);
+        $this->setStartDate($start);
+        $this->setEndDate($end);
+        $this->setWarningThresholdAsString($threshold_interval);
+
+        return $this;
     }
 
-    public function setStart($date = null)
+    public function setStartDate($date = null)
     {
         if (is_null($date)) {
-            $this->start = $this->getDefaultStart();
+            $this->start = $this->getDefaultStartDate();
             return;
         }
         $this->start = Carbon::parse($date);
     }
 
     // updates automatically the threshold date
-    public function setEnd($date = null)
+    public function setEndDate($date = null)
     {
         if (is_null($date)) {
-            $this->end = $this->getDefaultEnd();
+            $this->end = $this->getDefaultEndDate();
         } else {
             $this->end = Carbon::parse($date);
         }
 
-        $this->setThreshold();
+        $this->setWarningThresholdAsDate();
     }
 
-    public function setThreshold($date = null)
+    public function setWarningThresholdAsDate($date = null)
     {
         if (is_null($date) && isset($this->end) && !is_null($this->end)) {
             $this->threshold = $this->end->copy()->sub($this->getThresholdInterval());
@@ -56,31 +64,31 @@ class Progress
         $this->checkThreshold();
     }
 
-    public function setThresholdInterval($interval = null)
+    public function setWarningThresholdAsString($interval = null)
     {
         if (!is_null($interval)) {
             $this->threshold_interval = $interval;
         }
 
         // updates automatically the threshold date
-        $this->setThreshold();
+        $this->setWarningThresholdAsDate();
     }
 
-    public function setThresholdPercentage($percentage = null)
+    public function setWarningThresholdAsPercentage($percentage = null)
     {
         $float_percentage = floatval($percentage);
 
         $percentage_date = $this->convertPercentageToDate($float_percentage);
 
-        $this->setThreshold($percentage_date);
+        $this->setWarningThresholdAsDate($percentage_date);
     }
 
-    public function getDefaultStart()
+    public function getDefaultStartDate()
     {
         return Carbon::today()->subMonth();
     }
 
-    public function getDefaultEnd()
+    public function getDefaultEndDate()
     {
         return Carbon::today()->addMonth();
     }
@@ -253,7 +261,7 @@ class Progress
         return $expired_percentage;
     }
 
-    protected function getSafeProgressBar()
+    protected function getSafeProgressBarPortion()
     {
         if ($this->getSafePercentage()) {
             return '<div class="progress-bar '
@@ -268,7 +276,7 @@ class Progress
         return '';
     }
 
-    protected function getExpiringProgressBar()
+    protected function getExpiringProgressBarPortion()
     {
         if ($this->getExpiringPercentage()) {
             return '<div class="progress-bar '
@@ -283,7 +291,7 @@ class Progress
         return '';
     }
 
-    protected function getExpiredProgressBar()
+    protected function getExpiredProgressBarPortion()
     {
         if ($this->getExpiredPercentage()) {
             return '<div class="progress-bar '
@@ -301,9 +309,9 @@ class Progress
     public function render()
     {
         return '<div class="progress">'
-            . $this->getSafeProgressBar()
-            . $this->getExpiringProgressBar()
-            . $this->getExpiredProgressBar()
+            . $this->getSafeProgressBarPortion()
+            . $this->getExpiringProgressBarPortion()
+            . $this->getExpiredProgressBarPortion()
             . '</div>';
     }
 }
