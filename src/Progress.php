@@ -1,6 +1,6 @@
 <?php
 
-namespace Ealore;
+namespace Ealore\Progress;
 
 use Carbon\Carbon;
 

@@ -1,6 +1,6 @@
 <?php
 
-use Ealore\Progress;
+use Ealore\Progress\Progress;
 
 class ProgressTest extends PHPUnit_Framework_TestCase
 {
@@ -482,5 +482,21 @@ class ProgressTest extends PHPUnit_Framework_TestCase
             . '<div class="progress-bar progress-bar-success" style="width: 60%"><span class="sr-only">60%</span></div>'
             . '</div>',
             (new Progress($sixty_days_ago, $forty_days_from_now, 'P20D'))->render());
+    }
+
+    /**
+     * Wrapped a constructor with namespace in commas and chained render()
+     * Total 100 days, 60% already past, 40% left until expiration and 20% left until warning
+     * @test
+     */
+    public function testRenderChainedAfterConstructorWithNamespace()
+    {
+        $sixty_days_ago = Carbon\Carbon::today()->subDays(60);
+        $forty_days_from_now = Carbon\Carbon::today()->addDays(40);
+
+        $this->assertEquals('<div class="progress">'
+            . '<div class="progress-bar progress-bar-success" style="width: 60%"><span class="sr-only">60%</span></div>'
+            . '</div>',
+            (new \Ealore\Progress\Progress($sixty_days_ago, $forty_days_from_now, 'P20D'))->render());
     }
 }
